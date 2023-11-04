@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
 import android.util.Log
+import com.example.a23_tp3_depart.R
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,6 +14,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.ViewModelProvider
 import com.example.a23_tp3_depart.databinding.FragmentMapBinding
 import com.google.android.gms.location.*
@@ -23,6 +25,8 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
+import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 
 class MapFragment : Fragment(), OnMapReadyCallback {
@@ -32,12 +36,12 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     val LOCATION_PERMISSION_CODE = 1
 
     private val binding get() = _binding!!
-
+    private lateinit var fabAjout:FloatingActionButton
     private lateinit var mMap: GoogleMap
 
     // Position de l'utilisateur
     lateinit var userLocation: Location
-
+    private var modeAjout=false
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     private lateinit var locationRequest: LocationRequest
@@ -61,6 +65,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             ViewModelProvider(this).get(MapViewModel::class.java)
 
         _binding = FragmentMapBinding.inflate(inflater, container, false)
+        fabAjout=binding.fab
         val root: View = binding.root
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
@@ -70,11 +75,33 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        val colorStateList = ContextCompat.getColorStateList(requireContext(), R.color.red)
+        val colorStateList2 = ContextCompat.getColorStateList(requireContext(), R.color.teal_200)
         val mapFragment = childFragmentManager
             .findFragmentById(com.example.a23_tp3_depart.R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
-
+        fabAjout.setOnClickListener{
+            modeAjout=!modeAjout
+            if(modeAjout){
+                fabAjout.backgroundTintList=colorStateList
+                mMap.setOnMapClickListener { latLng ->
+                    val dialog = EditLocatDialogFragment()
+                    val args = Bundle()
+                    args.putString("name", latLng.toString())
+                    args.putDouble("latitude",latLng.latitude)
+                    args.putDouble("longitude", latLng.longitude)
+                    dialog.arguments = args
+                    // FragmentManager pour afficher le fragment de dialogue : childFragmentManager dans un Fragment, sinon SupportFragmentManager
+                    val fm: FragmentManager = childFragmentManager
+                    dialog.show(fm, "fragment_edit_name")
+                   // mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13f))
+                }
+            }
+            else{
+                fabAjout.backgroundTintList=colorStateList2
+                mMap.setOnMapClickListener(null)
+            }
+        }
         //todo : clic sur fab
         // 1. activer la fonction d'ajout de points
         // 2. régler la couleur du fab
@@ -99,7 +126,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                 // Si la demande est annulée, les tableaux de résultats (grantResults) sont vides.
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     //todo : Permission accordée. Continuez l'action ou le flux de travail dans l'application.
-
+                    enableMyLocation()
                     // Si la permission est refusée, on affiche un message d'information
                 } else if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_DENIED) {
                     // Le système décide s'il faut afficher une explication supplémentaire

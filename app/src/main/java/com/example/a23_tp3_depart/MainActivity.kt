@@ -11,18 +11,23 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
+import com.example.a23_tp3_depart.data.LocDao
+import com.example.a23_tp3_depart.data.LocDatabase
 import com.example.a23_tp3_depart.databinding.ActivityMainBinding
+import com.example.a23_tp3_depart.model.Locat
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
+    private lateinit var locDao: LocDao
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        locDao= LocDatabase.getInstance(this).locDao()
 
         setSupportActionBar(binding.appBarMain.toolbar)
 
@@ -49,5 +54,9 @@ class MainActivity : AppCompatActivity() {
     override fun onSupportNavigateUp(): Boolean {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
+    }
+
+    fun onCreatePointInteret(nom:String,categorie:String,adresse:String,latitude:Double,longitude:Double){
+        locDao.insert(Locat(nom,categorie,adresse,latitude,longitude))
     }
 }
