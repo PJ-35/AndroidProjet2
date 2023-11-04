@@ -1,5 +1,6 @@
 package com.example.a23_tp3_depart
 
+import android.content.Context
 import android.os.Bundle
 import android.view.Menu
 import com.google.android.material.snackbar.Snackbar
@@ -11,24 +12,26 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import com.example.a23_tp3_depart.data.LocDao
 import com.example.a23_tp3_depart.data.LocDatabase
 import com.example.a23_tp3_depart.databinding.ActivityMainBinding
 import com.example.a23_tp3_depart.model.Locat
+import com.example.a23_tp3_depart.ui.map.MapViewModel
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
-    private lateinit var locDao: LocDao
+    private lateinit var viewModelMain: MapViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        locDao= LocDatabase.getInstance(this).locDao()
-
+        viewModelMain = ViewModelProvider(this)[MapViewModel::class.java]
+        viewModelMain.setContext(this)
         setSupportActionBar(binding.appBarMain.toolbar)
 
         val drawerLayout: DrawerLayout = binding.drawerLayout
@@ -57,6 +60,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun onCreatePointInteret(nom:String,categorie:String,adresse:String,latitude:Double,longitude:Double){
-        locDao.insert(Locat(nom,categorie,adresse,latitude,longitude))
+        viewModelMain.insertLocation(Locat(nom,categorie,adresse,latitude,longitude))
     }
 }

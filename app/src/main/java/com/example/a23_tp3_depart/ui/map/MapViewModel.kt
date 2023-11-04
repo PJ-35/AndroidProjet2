@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import com.example.a23_tp3_depart.data.LocDatabase
 import com.example.a23_tp3_depart.model.Locat
+import kotlin.concurrent.thread
 
 class MapViewModel : ViewModel() {
 
@@ -14,7 +15,7 @@ class MapViewModel : ViewModel() {
 
     fun setContext(context: Context?) {
         mDb = LocDatabase.getInstance(context!!)
-        allLocations = mDb?.locDao()!!.getAllLocations()
+        thread { allLocations = mDb?.locDao()!!.getAllLocations() }.join()
     }
 
     fun getAllLocations(): LiveData<List<Locat>> {
@@ -22,6 +23,6 @@ class MapViewModel : ViewModel() {
     }
 
     fun insertLocation(location: Locat?) {
-        mDb?.locDao()!!.insert(location)
+        thread { mDb?.locDao()!!.insert(location) }.join()
     }
 }

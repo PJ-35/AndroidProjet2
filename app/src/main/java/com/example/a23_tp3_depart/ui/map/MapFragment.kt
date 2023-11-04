@@ -9,14 +9,18 @@ import com.example.a23_tp3_depart.R
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModelProvider
 import com.example.a23_tp3_depart.databinding.FragmentMapBinding
+import com.example.a23_tp3_depart.model.Locat
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -43,8 +47,11 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     lateinit var userLocation: Location
     private var modeAjout=false
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-
+    private lateinit var liveDataPointInteret:LiveData<List<Locat>>
     private lateinit var locationRequest: LocationRequest
+
+    // Variable pour suivre si la fenêtre d'information est actuellement affichée
+    private var currentMarker: Marker? = null
 
     // Déclaration pour le callback de la mise à jour de la position de l'utilisateur
     // Le callback est appelé à chaque fois que la position de l'utilisateur change
@@ -63,6 +70,8 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     ): View {
         val mapViewModel =
             ViewModelProvider(this).get(MapViewModel::class.java)
+        mapViewModel.setContext(requireContext())
+        liveDataPointInteret=mapViewModel.getAllLocations()
 
         _binding = FragmentMapBinding.inflate(inflater, container, false)
         fabAjout=binding.fab
@@ -84,23 +93,11 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             modeAjout=!modeAjout
             if(modeAjout){
                 fabAjout.backgroundTintList=colorStateList
-                mMap.setOnMapClickListener { latLng ->
-                    val dialog = EditLocatDialogFragment()
-                    val args = Bundle()
-                    args.putString("name", latLng.toString())
-                    args.putDouble("latitude",latLng.latitude)
-                    args.putDouble("longitude", latLng.longitude)
-                    dialog.arguments = args
-                    // FragmentManager pour afficher le fragment de dialogue : childFragmentManager dans un Fragment, sinon SupportFragmentManager
-                    val fm: FragmentManager = childFragmentManager
-                    dialog.show(fm, "fragment_edit_name")
-                   // mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13f))
-                }
             }
             else{
                 fabAjout.backgroundTintList=colorStateList2
-                mMap.setOnMapClickListener(null)
             }
+            setOnClickListenerMap()
         }
         //todo : clic sur fab
         // 1. activer la fonction d'ajout de points
@@ -189,7 +186,52 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         _binding = null
     }
 
+    /**
+     * Calcul la distance entre le locat séléctionné et l'utilisateur
+     */
+    private fun showDistance(locat:Locat): Float {
+        val markerLoc = Location("MarkerMessage")
+        markerLoc.latitude = locat.latitude
+        markerLoc.longitude = locat.longitude
+        return markerLoc.distanceTo(userLocation!!)
 
+    }
+
+    private fun setOnClickListenerMap(){
+        if(modeAjout){
+            mMap.setOnMapClickListener { latLng ->
+                // Vérifier si un marqueur est actuellement affiché
+                if (currentMarker != null) {
+                    // Fermer la fenêtre d'information du marqueur actuellement affiché
+                    currentMarker?.hideInfoWindow()
+                    // Réinitialiser la référence au marqueur
+                    currentMarker = null
+                }else{
+                    val dialog = EditLocatDialogFragment()
+                    val args = Bundle()
+                    args.putString("name", latLng.toString())
+                    args.putDouble("latitude",latLng.latitude)
+                    args.putDouble("longitude", latLng.longitude)
+                    dialog.arguments = args
+                    // FragmentManager pour afficher le fragment de dialogue : childFragmentManager dans un Fragment, sinon SupportFragmentManager
+                    val fm: FragmentManager = childFragmentManager
+                    dialog.show(fm, "fragment_edit_name")
+                }
+
+            }
+        }
+        else{
+            mMap.setOnMapClickListener { latLng ->
+                // Vérifier si un marqueur est actuellement affiché
+                if (currentMarker != null) {
+                    // Fermer la fenêtre d'information du marqueur actuellement affiché
+                    currentMarker?.hideInfoWindow()
+                    // Réinitialiser la référence au marqueur
+                    currentMarker = null
+                }
+            }
+        }
+    }
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
@@ -197,7 +239,27 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
         //todo : Vérification des permissions et positionnement si permission OK
         // normalement, ici, la demande de permission a déjà été traitée (onViewCreated)
-
+        if (ContextCompat.checkSelfPermission(requireActivity(), Manifest.permission.ACCESS_FINE_LOCATION)
+            == PackageManager.PERMISSION_GRANTED
+        ) {
+            liveDataPointInteret.observe(viewLifecycleOwner){lstVendeur->
+                for (vendeur in lstVendeur){
+                    val marker=mMap.addMarker(
+                        MarkerOptions().position(LatLng(vendeur.latitude,vendeur.longitude))
+                            .title(vendeur.nom)
+                    )!!
+                    marker.tag=vendeur
+                }
+            }
+        } else {
+            // La permission est manquante, demande donc la permission
+            ActivityCompat.requestPermissions(
+                requireActivity(),
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                LOCATION_PERMISSION_CODE
+            )
+            return
+        }
 
         //todo : régler le comportement de l'observe sur la liste de points retourné par le view model
         // --> méthode onChanged de l'Observer : afficher les marqueurs sur la carte depuis la liste de tous les points
@@ -207,9 +269,18 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
         //todo : clic sur carte
         // 2 cas : Mode Ajout de Point et Mode normal
+        mMap.setOnMarkerClickListener { marker ->
+            // Afficher la fenêtre d'information du marqueur
+            marker.showInfoWindow()
+            // Mettre à jour la variable pour indiquer que la fenêtre d'information est maintenant affichée
+            currentMarker = marker
 
-
+            // Retourner true pour indiquer que l'événement a été consommé et que le comportement par défaut ne doit pas être exécuté
+            true
+        }
+        setOnClickListenerMap()
         //todo : placer la barre de zoom
+        mMap.uiSettings.isZoomControlsEnabled = true
 
 
         // Configuration du Layout pour les popups (InfoWindow)
@@ -221,9 +292,24 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             override fun getInfoContents(marker: Marker): View {
                 val view: View = LayoutInflater.from(requireActivity()).inflate(com.example.a23_tp3_depart.R.layout.marker_layout, null)
                 // todo : clic sur marqueur
+                val locat=marker.tag as Locat
+                val tvName=view.findViewById<TextView>(R.id.tv_nom_map)
+                tvName.setText(locat.nom)
+                val tvCat=view.findViewById<TextView>(R.id.tv_cat_map)
+                tvCat.setText(locat.categorie)
+                val tv_addresse=view.findViewById<TextView>(R.id.tv_adr_map)
+                tv_addresse.setText(locat.adresse)
+                val imgPerson=view.findViewById<ImageView>(R.id.iv_photo_map)
+                if (locat.categorie=="Un")
+                    imgPerson.setImageResource(R.drawable.un)
+                else if(locat.categorie=="Deux")
+                    imgPerson.setImageResource(R.drawable.deux)
+                else
+                    imgPerson.setImageResource(R.drawable.trois)
+                val distance=showDistance(locat)
+                Toast.makeText(requireContext(),"la distance est ${distance}....",Toast.LENGTH_SHORT).show()
                 // 1. affichage de distance sur le fragment
                 // 2. Déployer le layout de la vue Marker et passer les valeurs du point cliqué afin d'affichage
-
                 return view
             }
         })
