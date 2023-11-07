@@ -8,6 +8,9 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.a23_tp3_depart.R
 import com.example.a23_tp3_depart.data.LocDao
 import com.example.a23_tp3_depart.data.LocDatabase
 import com.example.a23_tp3_depart.databinding.FragmentHomeBinding
@@ -18,6 +21,8 @@ class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
 
     private val binding get() = _binding!!
+    private lateinit var rvHome: RecyclerView
+    private lateinit var adapter: HomeAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -34,6 +39,7 @@ class HomeFragment : Fragment() {
         val root: View = binding.root
 
 
+
         return root
     }
 
@@ -41,13 +47,23 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // todo : déclaration et instanciation du RecyclerView
-        // todo : configuration
-        // todo : adapteur et passage de l'adapteur au RecyclerView
+        rvHome = view.findViewById(R.id.rv_location)
 
+        // todo : configuration
+        rvHome.layoutManager = LinearLayoutManager(requireContext())
+        rvHome.setHasFixedSize(true)
+        // todo : adapteur et passage de l'adapteur au RecyclerView
+        adapter = HomeAdapter()
+        rvHome.adapter = adapter
 
         // todo : régler le comportement de l'observe sur la liste de points retourné par le view model
         // --> méthode onChanged de l'Observer : passer la liste à l'adapteur
-
+        // Récupérez la liste de points depuis le ViewModel et observez les changements
+        val homeViewModel = ViewModelProvider(this).get(HomeViewModel::class.java)
+        homeViewModel.getAllLocations().observe(viewLifecycleOwner) { locations ->
+            // Passer la liste de points à l'adaptateur
+            adapter.setLocations(locations)
+        }
     }
 
     override fun onDestroyView() {

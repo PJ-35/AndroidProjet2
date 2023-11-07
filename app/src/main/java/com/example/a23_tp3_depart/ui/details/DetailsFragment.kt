@@ -40,22 +40,41 @@ class DetailsFragment : Fragment(), OnMapReadyCallback {
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-
+        galleryViewModel.setContext(requireContext())
         return root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         // todo : titre de fragment dans l'ActionBar
+        requireActivity().title = getString(R.string.menu_details)
 
-
+        // TODO : Instanciation correcte de l'id d'élément détaillé
+        val itemId = arguments?.getInt("id") ?: -1
+        assert(itemId != -1)
         // todo : instanciation correcte de l'id d'élément détaillé
         assert(arguments != null)
 
         // todo : régler le comportement de l'observe sur le point retourné par le view model
         // --> méthode onChanged de l'Observer : passer les valeurs du point courant à la View
+        val detailsViewModel = ViewModelProvider(this).get(DetailsViewModel::class.java)
 
-        // todo : get mapFragment
+        detailsViewModel.getLocationById(itemId).observe(viewLifecycleOwner) { location ->
+            binding.tvNomDetails.text = location.nom
+            binding.tvAdresseDetails.text = location.adresse
+            //binding.ivLocationBottom.setImageDrawable(location.)
+            // todo : get mapFragment
+            val markerOptions = MarkerOptions()
+                .position(LatLng(location.latitude, location.longitude))
+                .title(location.nom)
+            mMap.addMarker(markerOptions)
+
+            val cameraPosition = CameraPosition.Builder()
+                .target(LatLng(location.latitude, location.longitude))
+                .zoom(15f)
+                .build()
+            mMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
+        }
     }
 
     override fun onDestroyView() {
