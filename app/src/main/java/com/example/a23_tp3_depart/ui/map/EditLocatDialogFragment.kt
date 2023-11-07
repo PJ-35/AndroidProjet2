@@ -23,7 +23,7 @@ import com.google.android.gms.maps.SupportMapFragment
 class EditLocatDialogFragment() : DialogFragment() {
     private lateinit var spinner: Spinner
     private lateinit var champNom: EditText
-    private var name: String? =null
+    private var adresse:String?=null
     private var latitude: Double =0.0
     private var longitude: Double = 0.0
 
@@ -50,9 +50,9 @@ class EditLocatDialogFragment() : DialogFragment() {
 
         // Récupère les arguments passés à la boîte de dialogue depuis l'activité appelante
         arguments?.let {
-            name = it.getString("name")
             latitude = it.getDouble("latitude")
             longitude = it.getDouble("longitude")
+            adresse=it.getString("adresse")
             builder?.setTitle("Création d'un nouveau point d'intérêts")
         }
         // Importe le layout de la boîte de dialogue
@@ -67,7 +67,7 @@ class EditLocatDialogFragment() : DialogFragment() {
                 if(nom.isNullOrEmpty()||categorie.isNullOrEmpty()) {
                     Toast.makeText(requireContext(), "Le point d'intérêts n'a pas été créé. Informations insuffisantes ou mal entrées", Toast.LENGTH_SHORT).show()
                 }else{
-                    (activity as MainActivity).onCreatePointInteret(nom,categorie,name!!,latitude,longitude)
+                    (activity as MainActivity).onCreatePointInteret(nom,categorie,adresse!!,latitude,longitude)
                 }
                 // Retourne le nom modifié à l'activité
                 Log.i("TAG CLIC DIALOG", "$nom $categorie")

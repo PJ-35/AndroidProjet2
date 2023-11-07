@@ -2,6 +2,8 @@ package com.example.a23_tp3_depart.ui.map
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.location.Address
+import android.location.Geocoder
 import android.location.Location
 import android.os.Bundle
 import android.util.Log
@@ -31,6 +33,8 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import java.io.IOException
+import java.util.Locale
 
 
 class MapFragment : Fragment(), OnMapReadyCallback {
@@ -209,7 +213,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                 }else{
                     val dialog = EditLocatDialogFragment()
                     val args = Bundle()
-                    args.putString("name", latLng.toString())
+                    args.putString("adresse",getAddress(latLng))
                     args.putDouble("latitude",latLng.latitude)
                     args.putDouble("longitude", latLng.longitude)
                     dialog.arguments = args
@@ -233,6 +237,47 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         }
     }
 
+
+    // Fonction de requête d'adresse civique
+    private fun getAddress(mLatlng: LatLng): String {
+        // Geocoder
+        val mGeocoder = Geocoder(requireContext(), Locale.getDefault())
+        var chaineAddresse = ""
+
+        // Appel de Geocoder
+        try {
+            val addressList: List<Address> = mGeocoder.getFromLocation(mLatlng.latitude, mLatlng.longitude, 1)!!
+            // renvoie une liste d'adresse
+            if (addressList != null && addressList.isNotEmpty()) {
+                // on ne garde que la première
+                val addresse = addressList[0]
+                val sb = StringBuilder()
+                for (i in 0 until addresse.maxAddressLineIndex) {
+                    sb.append(addresse.getAddressLine(i)).append("\n")
+                    Log.i("***Adresse***", addresse.toString())
+                }
+                Log.i("MAP ADRESSE", addresse.toString())
+
+                // Various Parameters of an Address are appended
+                // to generate a complete Address
+                if (addresse.premises != null)
+                    sb.append(addresse.premises).append(", ")
+
+                sb.append(addresse.subAdminArea).append("\n")
+                sb.append(addresse.locality).append(", ")
+                sb.append(addresse.adminArea).append(", ")
+                sb.append(addresse.countryName).append(", ")
+                sb.append(addresse.postalCode)
+
+                chaineAddresse = sb.toString()
+            }
+        } catch (e: IOException) {
+            Toast.makeText(requireContext(),"Une erreur s'est produite, Veuillez reéssayer",Toast.LENGTH_LONG).show()
+        }
+        return chaineAddresse
+    }
+
+
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
@@ -244,7 +289,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         ) {
             liveDataPointInteret.observe(viewLifecycleOwner){lstVendeur->
                 for (vendeur in lstVendeur){
-                    val marker=mMap.addMarker(
+                    val marker:Marker=mMap.addMarker(
                         MarkerOptions().position(LatLng(vendeur.latitude,vendeur.longitude))
                             .title(vendeur.nom)
                     )!!
