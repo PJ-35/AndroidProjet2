@@ -6,7 +6,7 @@
     <string name="nav_header_subtitle">Tp3 android studio</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Paramètres</string>
-    <string name="menu_home">Liste des points d\'intérêt</string>
+    <string name="menu_home">Liste des points d\'intérêts</string>
     <string name="menu_map">Carte</string>
     <string name="menu_details">Details</string>
 
