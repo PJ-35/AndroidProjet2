@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.a23_tp3_depart.R
@@ -64,6 +65,16 @@ class DetailsFragment : Fragment(), OnMapReadyCallback {
             if (location != null) {
                 binding.tvNomDetails.text = location.nom
                 binding.tvAdresseDetails.text = location.adresse
+                binding.tvCategorieDetails.text=location.categorie
+
+                val imgPerson=  binding.ivLocationBottom
+                if (location.categorie=="Un")
+                    imgPerson.setImageResource(R.drawable.un)
+                else if(location.categorie=="Deux")
+                    imgPerson.setImageResource(R.drawable.deux)
+                else
+                    imgPerson.setImageResource(R.drawable.trois)
+                //binding.ivLocationBottom.setImageDrawable(R.drawable.)
                 //binding.ivLocationBottom.setImageDrawable(location.)
                 // todo : get mapFragment
                 val markerOptions = MarkerOptions()
