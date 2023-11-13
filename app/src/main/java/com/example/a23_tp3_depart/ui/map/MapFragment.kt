@@ -220,6 +220,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     // FragmentManager pour afficher le fragment de dialogue : childFragmentManager dans un Fragment, sinon SupportFragmentManager
                     val fm: FragmentManager = childFragmentManager
                     dialog.show(fm, "fragment_edit_name")
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13f))
                 }
 
             }
@@ -303,7 +304,6 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                 LOCATION_PERMISSION_CODE
             )
-            return
         }
 
         //todo : régler le comportement de l'observe sur la liste de points retourné par le view model
@@ -319,6 +319,8 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             marker.showInfoWindow()
             // Mettre à jour la variable pour indiquer que la fenêtre d'information est maintenant affichée
             currentMarker = marker
+
+
 
             // Retourner true pour indiquer que l'événement a été consommé et que le comportement par défaut ne doit pas être exécuté
             true
@@ -351,6 +353,8 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     imgPerson.setImageResource(R.drawable.deux)
                 else
                     imgPerson.setImageResource(R.drawable.trois)
+                //centrer le marqueur
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(locat!!.latitude, locat!!.longitude), 13f))
                 val distance=showDistance(locat)
                 Toast.makeText(requireContext(),"la distance est ${distance}....",Toast.LENGTH_SHORT).show()
                 // 1. affichage de distance sur le fragment
