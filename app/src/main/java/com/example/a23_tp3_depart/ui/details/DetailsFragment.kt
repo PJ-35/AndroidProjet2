@@ -58,22 +58,26 @@ class DetailsFragment : Fragment(), OnMapReadyCallback {
         // todo : régler le comportement de l'observe sur le point retourné par le view model
         // --> méthode onChanged de l'Observer : passer les valeurs du point courant à la View
         val detailsViewModel = ViewModelProvider(this).get(DetailsViewModel::class.java)
+        detailsViewModel.setContext(requireContext())
 
         detailsViewModel.getLocationById(itemId).observe(viewLifecycleOwner) { location ->
-            binding.tvNomDetails.text = location.nom
-            binding.tvAdresseDetails.text = location.adresse
-            //binding.ivLocationBottom.setImageDrawable(location.)
-            // todo : get mapFragment
-            val markerOptions = MarkerOptions()
-                .position(LatLng(location.latitude, location.longitude))
-                .title(location.nom)
-            mMap.addMarker(markerOptions)
+            if (location != null) {
+                binding.tvNomDetails.text = location.nom
+                binding.tvAdresseDetails.text = location.adresse
+                //binding.ivLocationBottom.setImageDrawable(location.)
+                // todo : get mapFragment
+                val markerOptions = MarkerOptions()
+                    .position(LatLng(location.latitude, location.longitude))
+                    .title(location.nom)
+                mMap.addMarker(markerOptions)
 
-            val cameraPosition = CameraPosition.Builder()
-                .target(LatLng(location.latitude, location.longitude))
-                .zoom(15f)
-                .build()
-            mMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
+                val cameraPosition = CameraPosition.Builder()
+                    .target(LatLng(location.latitude, location.longitude))
+                    .zoom(15f)
+                    .build()
+                mMap.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
+            }
+
         }
     }
 
