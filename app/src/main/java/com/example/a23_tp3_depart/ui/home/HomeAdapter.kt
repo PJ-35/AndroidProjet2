@@ -45,7 +45,15 @@ class HomeAdapter : RecyclerView.Adapter<HomeAdapter.NoteHolder>() {
         holder.tvCategorie.text = categorie
         holder.tvNom.setText(currentLocation.nom)
         holder.tvAdresse.setText(currentLocation.adresse)
-        holder.ivLocation.setImageResource(R.drawable.pleinair)
+       // holder.ivLocation.setImageResource(R.drawable.pleinair)
+
+        val imgPerson=  holder.ivLocation
+        if (currentLocation.categorie=="Un")
+            imgPerson.setImageResource(R.drawable.un)
+        else if(currentLocation.categorie=="Deux")
+            imgPerson.setImageResource(R.drawable.deux)
+        else
+            imgPerson.setImageResource(R.drawable.trois)
         holder.itemView.setOnClickListener { v ->
             //todo : clic sur rangée : Navigation vers le fragment Détail avec Id du point détaillé
             val itemId = currentLocation.id // L'ID de l'élément sélectionné
